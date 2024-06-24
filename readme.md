@@ -13,5 +13,7 @@ The orderbook is designed to efficiently handle a large number of buy and sell o
 - Concurrency : wrap the orderbooks_manager around a RwLock to use it in concurency setup.
 - Order Matching: Matches buy and sell orders based on price.
 - Order Cancellation : Supports the cancellation of orders before they are matched.
+- Order Update: Supports the update of orders before they are matched (amend quantity and price).
 - Message Queue: Each state produce a message that you can listen an react to.
+- Orderbook summary: Support orderbook summary generation for displaying an UI orderbook (Price levels)
 
