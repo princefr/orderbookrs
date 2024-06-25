@@ -1,9 +1,8 @@
-use async_graphql::*;
 use core::fmt;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Copy, Enum)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Copy)]
 pub enum OrderStatus {
     #[serde(rename = "OPEN")]
     Open,

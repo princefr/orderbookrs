@@ -16,12 +16,15 @@ pub struct Orderbook {
 }
 
 impl Orderbook {
-    /*
-        * Create a new orderbook
-        @param symbol: uuid::Uuid
-        @param tx: Sender<OrderbookUpdate>
-        @return Orderbook
-    */
+    /// Create a new orderbook
+    /// 
+    /// #Parameters
+    /// 
+    /// * 'symbol' - The symbol ID
+    /// * 'tx' - The channel Sender [please refer to crossbeam_channel] 
+    /// 
+    /// #Returns
+    /// * 'Orderbook' - The instance of the orderbook
     pub fn new(symbol: u128, tx: Sender<OrderbookUpdate>) -> Orderbook {
         Orderbook {
             symbol,
@@ -31,9 +34,7 @@ impl Orderbook {
         }
     }
 
-    /*
-     * summarize_orderbook_per_price_level returns a tuple of (Vec<(f64, f64, f64)>, f64, Vec<(f64, f64, f64)>) where the first element is a vector of bids, the second element is the mid price and the third element is a vector of asks
-     */
+    /// summarize_orderbook_per_price_level returns a tuple of (Vec<(f64, f64, f64)>, f64, Vec<(f64, f64, f64)>) where the first element is a vector of bids, the second element is the mid price and the third element is a vector of asks
     pub fn summarize_orderbook_per_price_level(
         &self,
     ) -> (Vec<(f64, f64, f64)>, f64, Vec<(f64, f64, f64)>) {
@@ -53,10 +54,10 @@ impl Orderbook {
         (bids, self.get_mid_price(), asks)
     }
 
-    /*
-    * get_mid_price returns the mid price of the orderbook
-    @return f64
-    */
+    /// get_mid_price returns the mid price of the orderbook
+    /// 
+    /// #Returns
+    /// * f64 - The middle price 
     pub fn get_mid_price(&self) -> f64 {
         let bid = self.bids.peek();
         let ask = self.asks.peek();
@@ -66,10 +67,7 @@ impl Orderbook {
         }
     }
 
-    /*
-    * place an order in the orderbook
-    @param order: Order
-    */
+    /// place an order in the orderbook
     pub fn place_order(&mut self, order: Order) {
         match order.side {
             OrderSide::Buy => self.bids.push(order),
@@ -88,11 +86,7 @@ impl Orderbook {
         self.match_orders();
     }
 
-    /*
-     * match_orders matches the orders in the orderbook
-     * @param order_id: uuid::Uuid
-     * @param new_price: f64, the new price of the order
-     */
+    /// match_orders matches the orders in the orderbook
     pub fn amend_order_price(&mut self, order_id: u128, new_price: f64, order_side: OrderSide) {
         let mut order: Option<Order> = None;
         match order_side {
@@ -126,11 +120,7 @@ impl Orderbook {
         self.match_orders();
     }
 
-    /*
-    * amend_order_quantity amends the quantity of an order in the orderbook
-    @param order_id: uuid::Uuid
-    @param new_quantity: f64
-    */
+    ///amend_order_quantity amends the quantity of an order in the orderbook
     pub fn amend_order_quantity(
         &mut self,
         order_id: u128,
@@ -169,11 +159,7 @@ impl Orderbook {
         self.match_orders();
     }
 
-    /*
-    * update_order updates the quantity of an order in the orderbook
-    @param order_id: uuid::Uuid
-    @param new_quantity: f64
-    */
+    /// update_order updates the quantity of an order in the orderbook
     pub fn update_order(&mut self, order_id: u128, new_quantity: f64, order_side: OrderSide) {
         let mut order: Option<Order> = None;
         match order_side {
@@ -207,9 +193,7 @@ impl Orderbook {
             .unwrap();
     }
 
-    /*
-     * match orders in the orderbook
-     */
+    /// match orders in the orderbook
     pub fn match_orders(&mut self) {
         while let Some(ask) = self.asks.peek() {
             if let Some(bid) = self.bids.peek() {
@@ -302,10 +286,7 @@ impl Orderbook {
         }
     }
 
-    /*
-    * cancel_order cancels an order in the orderbook
-    @param order_id: uuid::Uuid
-    */
+    /// cancel_order cancels an order in the orderbook
     pub fn cancel_order(&mut self, order_id: u128, order_side: OrderSide) {
         match order_side {
             OrderSide::Buy => {
@@ -327,10 +308,7 @@ impl Orderbook {
             .unwrap();
     }
 
-    /*
-    * order_filled marks an order as filled in the orderbook
-    @param order_id: uuid::Uuid
-    */
+    /// order_filled marks an order as filled in the orderbook
     pub fn order_filled(&mut self, order_id: u128, order_side: OrderSide) {
         match order_side {
             OrderSide::Buy => {
@@ -352,10 +330,7 @@ impl Orderbook {
             .unwrap();
     }
 
-    /*
-    * add_order adds an order to the orderbook without matching it
-    @param order: Order
-    */
+    /// add_order adds an order to the orderbook without matching it
     pub fn add_order(&mut self, order: Order) {
         self.tx
             .send(OrderbookUpdate {
@@ -489,9 +464,12 @@ impl Orderbook {
     }
 }
 
+
 #[cfg(test)]
 mod tests {
+    
     use std::time::Instant;
+    
 
     use super::*;
     use crate::enums::order_type::OrderType;
@@ -794,6 +772,7 @@ mod tests {
         assert_eq!(orderbook.bids.len(), 0);
         assert_eq!(orderbook.asks.len(), 0);
     }
+
 
     #[test]
     fn test_benchmark() {

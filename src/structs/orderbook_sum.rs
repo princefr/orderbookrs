@@ -1,6 +1,5 @@
-use async_graphql::*;
 
-#[derive(SimpleObject, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct BidAskSummarize {
     pub price: f64,
     pub qty: f64,
@@ -19,7 +18,7 @@ impl BidAskSummarize {
     }
 }
 
-#[derive(SimpleObject, Debug)]
+#[derive(Debug)]
 pub struct OrderBookSummarized {
     pub bids: Vec<BidAskSummarize>,
     pub mid_price: f64,

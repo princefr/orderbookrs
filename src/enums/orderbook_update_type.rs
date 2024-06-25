@@ -4,15 +4,15 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Copy)]
 pub enum OrderbookUpdateType {
-    /*Trigger saving of the new order with Pending Status */
+    ///Trigger saving of the new order with Pending Status
     New,
-    /*Trigger saving of the new order with Open Status */
+    ///Trigger saving of the new order with Open Status
     Place,
-    /*Trigger saving of the new order with Cancelled Status */
+    ///Trigger saving of the new order with Cancelled Status
     Cancel,
-    /*Trigger saving of the new order with Partially Filled Status */
+    ///Trigger saving of the new order with Partially Filled Status
     Update,
-    /*Trigger saving of the new order with Filled Status */
+    ///Trigger saving of the new order with Filled Status
     NewTrades,
     Filled,
 }

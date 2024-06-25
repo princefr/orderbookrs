@@ -12,7 +12,6 @@ serde_derive = "1.0.202"
 crossbeam-channel = "0.5.13"
 async-stream = "0.3.5"
 futures-util = "0.3.30"
-async-graphql = { version = "7.0.6", features = ["unblock"] }
 bytes = "1.6.0"
 tokio = { version = "1.37.0", features = ["macros", "rt-multi-thread"] }
 ulid = "1.1.2"

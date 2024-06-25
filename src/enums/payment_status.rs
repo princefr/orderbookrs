@@ -1,9 +1,8 @@
-use async_graphql::*;
 use serde::{Deserialize, Serialize};
 
 use std::fmt;
 
-#[derive(Enum, Copy, Clone, Eq, PartialEq, Debug, Serialize, Deserialize)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Serialize, Deserialize)]
 pub enum PaymentStatus {
     Pending,
     Paid,

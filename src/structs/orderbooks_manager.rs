@@ -5,7 +5,7 @@ use crate::structs::order::Order;
 use crate::structs::orderbook_sum::{BidAskSummarize, OrderBookSummarized};
 use crate::{OrderSide, OrderbookUpdateType};
 use async_stream::stream;
-use crossbeam_channel::{Receiver, Sender};
+use crossbeam_channel::{unbounded, Receiver, Sender};
 use futures_util::Stream;
 use std::collections::HashMap;
 use std::io::Error;
@@ -18,13 +18,12 @@ pub struct OrderbooksManager {
 }
 
 impl OrderbooksManager {
-    /*
-    * Create a new OrderbooksManager that will manage all orderbooks
-        @param tx: Sender<OrderbookUpdate>
-        @param rx: Receiver<OrderbookUpdate>
-        @return OrderbooksManager
-    */
-    pub fn new(tx: Sender<OrderbookUpdate>, rx: Receiver<OrderbookUpdate>) -> OrderbooksManager {
+    /// Create a new OrderbooksManager that will manage all orderbooks
+    ///
+    /// #Returns
+    /// * OrderbooksManager - An instance of the orderbook manager
+    pub fn new() -> OrderbooksManager {
+        let (tx, rx) = unbounded::<OrderbookUpdate>();
         OrderbooksManager {
             orderbooks: HashMap::new(),
             tx,
@@ -32,22 +31,22 @@ impl OrderbooksManager {
         }
     }
 
-    /*
-    * Create a new orderbook
-        @param symbol: uuid::Uuid
-
-    */
+    /// Create a new orderbook with a symbol
+    ///
+    /// Parameters
+    /// * 'symbol' : The symbol ID the new orderbook will be in
     pub fn new_orderbook<'a>(&mut self, symbol: u128) {
+        let exist = self.get_orderbook(symbol).is_ok();
+        assert!(exist == false, "the orderbook already exist");
+        // Todo!("assert or something else?")
         let orderbook = Orderbook::new(symbol, self.tx.clone());
         self.orderbooks.insert(symbol, orderbook);
     }
 
-    /*
-    * Get an orderbook by symbol
-        @param symbol: uuid::Uuid
-        @return ()
-        @throws Error
-    */
+    /// Add an order to the orderbook
+    ///
+    /// Parameters
+    /// * 'symbol' : The symbol ID
     pub fn add_order<'a>(&mut self, order: Order) -> Result<(), Error> {
         if let Some(orderbook) = self.orderbooks.get_mut(&order.symbol) {
             orderbook.add_order(order);
@@ -59,14 +58,13 @@ impl OrderbooksManager {
         ))
     }
 
-    /*
-    * Amend an order by order_id
-        @param order_id: uuid::Uuid
-        @param price: Option<f64>
-        @param quantity: Option<f64>
-        @return ()
-        @throws Error
-    */
+    /// Amend an order price in the orderbook
+    ///
+    /// Parameters
+    /// * 'symbol' : The symbol ID
+    /// * 'order_id': The order ID to ammend
+    /// * 'price': The new price of the order
+    /// * 'side': The order side
     pub fn amend_order_price<'a>(
         &mut self,
         symbol: u128,
@@ -84,14 +82,13 @@ impl OrderbooksManager {
         ))
     }
 
-    /*
-    * Amend an order by order_id
-        @param order_id: uuid::Uuid
-        @param price: Option<f64>
-        @param quantity: Option<f64>
-        @return ()
-        @throws Error
-    */
+    /// Amend an order quanitty in the orderbook
+    ///
+    /// #Parameters
+    /// * 'symbol' : The symbol ID
+    /// * 'order_id': The order ID to ammend
+    /// * 'quantity': The new quantity of the order
+    /// * 'side': The order side
     pub fn amend_order_quantity<'a>(
         &mut self,
         symbol: u128,
@@ -109,12 +106,12 @@ impl OrderbooksManager {
         ))
     }
 
-    /*
-    * Cancel an order by order_id
-        @param order_id: uuid::Uuid
-        @return ()
-        @throws Error
-    */
+    /// Cancel the order by order_id
+    ///
+    /// #Parameters
+    /// * 'order_id' - The order ID
+    /// * 'symbol' - The symbol ID
+    /// * 'side'- The order side
     pub fn cancel_order<'a>(
         &mut self,
         order_id: u128,
@@ -128,12 +125,10 @@ impl OrderbooksManager {
         Err(Error::new(std::io::ErrorKind::NotFound, "Order not found"))
     }
 
-    /*
-    * Get an orderbook summary by symbol
-        @param symbol: uuid::Uuid
-        @return OrderBookSummarized
-        @throws Error
-    */
+    /// Get an orderbook summary by symbol
+    ///
+    /// Parameters
+    /// * 'symbol' - The symbol ID
     pub fn get_orderbook(&self, symbol: u128) -> Result<OrderBookSummarized, Error> {
         if let Some(orderbook) = self.orderbooks.get(&symbol) {
             let summary = orderbook.summarize_orderbook_per_price_level();
@@ -162,10 +157,7 @@ impl OrderbooksManager {
         ))
     }
 
-    /*
-    * Listen to new orders
-        @return impl Stream<Item = Order>
-    */
+    /// Listen to new orders
     pub fn listen_new_orders<'a>(&'a self) -> impl Stream<Item = Order> {
         let rx = self.rx.clone();
         stream! {
@@ -184,10 +176,7 @@ impl OrderbooksManager {
         }
     }
 
-    /*
-    * Listen to new orders
-        @return impl Stream<Item = Order>
-    */
+    /// Listen to placed orders
     pub fn listen_placed_orders<'a>(&'a self) -> impl Stream<Item = Order> {
         let rx = self.rx.clone();
         stream! {
@@ -206,10 +195,7 @@ impl OrderbooksManager {
         }
     }
 
-    /*
-    * Listen to new trades
-        @return impl Stream<Item = Trade>
-    */
+    /// Listen to new trades
     pub fn listen_new_trades<'a>(&self) -> impl Stream<Item = Trade> {
         let rx = self.rx.clone();
         stream! {
@@ -228,10 +214,7 @@ impl OrderbooksManager {
         }
     }
 
-    /*
-    * Listen to orderbook summary
-        @return impl Stream<Item = OrderBookSummarized>
-    */
+    /// listen to orderbook summary by symbol
     pub fn listen_orderbook_summary_by_symbol<'a>(
         &'a self,
         symbol: u128,
@@ -320,10 +303,7 @@ impl OrderbooksManager {
         }
     }
 
-    /*
-    * Listen to orderbook updates
-        @return impl Stream<Item = Order>
-    */
+    /// Listen to orderbook updates
     pub fn listen_orderbook_updates<'a>(&self) -> impl Stream<Item = Order> {
         let rx = self.rx.clone();
         stream! {
@@ -343,10 +323,7 @@ impl OrderbooksManager {
         }
     }
 
-    /*
-    * Listen to orderbook cancels
-        @return impl Stream<Item = Order>
-    */
+    /// Listen to orderbook cancels
     pub fn listen_orderbook_cancels<'a>(&self) -> impl Stream<Item = u128> {
         let rx = self.rx.clone();
         stream! {
@@ -365,10 +342,7 @@ impl OrderbooksManager {
         }
     }
 
-    /*
-    * Listen to orderbook fills
-        @return impl Stream<Item = Order>
-    */
+    /// Listen to orderbook fills
     pub fn listen_orderbook_fills<'a>(&self) -> impl Stream<Item = u128> {
         let rx = self.rx.clone();
         stream! {
@@ -396,14 +370,12 @@ mod tests {
     use crate::enums::order_type::OrderType;
     use crate::enums::side::OrderSide;
     use crate::structs::order::Order;
-    use crossbeam_channel::unbounded;
     use futures_util::StreamExt;
     use ulid::Ulid;
 
     #[tokio::test]
     async fn test_listen_to_new_orders() {
-        let (tx, r) = unbounded::<OrderbookUpdate>();
-        let mut orderbooks_manager = OrderbooksManager::new(tx.clone(), r.clone());
+        let mut orderbooks_manager = OrderbooksManager::new();
 
         let symbol = Ulid::new().into();
         orderbooks_manager.new_orderbook(symbol);
@@ -450,8 +422,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_listen_to_placed_orders() {
-        let (tx, r) = unbounded::<OrderbookUpdate>();
-        let mut orderbooks_manager = OrderbooksManager::new(tx.clone(), r.clone());
+        let mut orderbooks_manager = OrderbooksManager::new();
 
         let symbol = Ulid::new().into();
         orderbooks_manager.new_orderbook(symbol);
@@ -498,8 +469,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_listen_to_orderbook_summary() {
-        let (tx, r) = unbounded::<OrderbookUpdate>();
-        let mut orderbooks_manager = OrderbooksManager::new(tx.clone(), r.clone());
+        let mut orderbooks_manager = OrderbooksManager::new();
 
         let symbol = Ulid::new().into();
         orderbooks_manager.new_orderbook(symbol);
@@ -566,8 +536,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_listen_to_orderbook_summary_sell() {
-        let (tx, r) = unbounded::<OrderbookUpdate>();
-        let mut orderbooks_manager = OrderbooksManager::new(tx.clone(), r.clone());
+        let mut orderbooks_manager = OrderbooksManager::new();
 
         let symbol = Ulid::new().into();
         orderbooks_manager.new_orderbook(symbol);
@@ -634,8 +603,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_listen_to_orderbook_updates_amend_price() {
-        let (tx, r) = unbounded::<OrderbookUpdate>();
-        let mut orderbooks_manager = OrderbooksManager::new(tx.clone(), r.clone());
+        let mut orderbooks_manager = OrderbooksManager::new();
 
         let symbol = Ulid::new().into();
         orderbooks_manager.new_orderbook(symbol);
@@ -659,8 +627,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_listen_to_orderbook_updates_amend_quantity() {
-        let (tx, r) = unbounded::<OrderbookUpdate>();
-        let mut orderbooks_manager = OrderbooksManager::new(tx.clone(), r.clone());
+        let mut orderbooks_manager = OrderbooksManager::new();
 
         let symbol = Ulid::new().into();
         orderbooks_manager.new_orderbook(symbol);
@@ -684,8 +651,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_listen_to_new_trade() {
-        let (tx, r) = unbounded::<OrderbookUpdate>();
-        let mut orderbooks_manager = OrderbooksManager::new(tx.clone(), r.clone());
+        let mut orderbooks_manager = OrderbooksManager::new();
 
         let symbol = Ulid::new().into();
         orderbooks_manager.new_orderbook(symbol);
@@ -721,8 +687,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_listen_to_filled_orders() {
-        let (tx, r) = unbounded::<OrderbookUpdate>();
-        let mut orderbooks_manager = OrderbooksManager::new(tx.clone(), r.clone());
+        let mut orderbooks_manager = OrderbooksManager::new();
 
         let symbol = Ulid::new().into();
         orderbooks_manager.new_orderbook(symbol);
@@ -756,8 +721,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_listen_to_cancelled_orders() {
-        let (tx, r) = unbounded::<OrderbookUpdate>();
-        let mut orderbooks_manager = OrderbooksManager::new(tx.clone(), r.clone());
+        let mut orderbooks_manager = OrderbooksManager::new();
 
         let symbol = Ulid::new().into();
         orderbooks_manager.new_orderbook(symbol);

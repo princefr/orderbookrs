@@ -17,3 +17,28 @@ The orderbook is designed to efficiently handle a large number of buy and sell o
 - Message Queue: Each state produce a message that you can listen an react to.
 - Orderbook summary: Support orderbook summary generation for displaying an UI orderbook (Price levels)
 
+***the repo use ulid to generate IDs, please add it into your project if you intend to use this orderbook implementation***
+
+````rust
+use orderbook::OrderbooksManager;
+use orderbook::OrderType;
+use orderbook::OrderSide;
+use orderbook::Order;
+use ulid::Ulid;
+
+
+let symbol: u128 = Ulid::new().into();
+orderbooks_manager.new_orderbook(symbol);
+
+let order1 = Order::new(
+    Ulid::new().into(),
+    symbol,
+    OrderSide::Buy,
+    1.0,
+    Some(1.0),
+    OrderType::Limit,
+);
+
+let _ = orderbooks_manager.add_order(order1.clone());
+
+```

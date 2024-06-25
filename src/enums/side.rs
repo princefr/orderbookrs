@@ -1,10 +1,9 @@
-use async_graphql::*;
 use core::fmt;
 
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Copy, Enum)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Copy)]
 pub enum OrderSide {
     #[serde(rename = "BUY")]
     Buy,
