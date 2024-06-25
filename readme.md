@@ -26,7 +26,7 @@ use orderbook::OrderSide;
 use orderbook::Order;
 use ulid::Ulid;
 
-
+let mut orderbooks_manager = OrderbooksManager::new();
 let symbol: u128 = Ulid::new().into();
 orderbooks_manager.new_orderbook(symbol);
 
